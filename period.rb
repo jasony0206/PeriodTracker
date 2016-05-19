@@ -18,4 +18,5 @@ cycle_lengths = first_days.each_cons(2).map do |day1, day2|
 	(day2 - day1).to_i
 end
 
-puts cycle_lengths.inspect
+avg_cycle = cycle_lengths.reduce(:+) / cycle_lengths.length
+puts avg_cycle
