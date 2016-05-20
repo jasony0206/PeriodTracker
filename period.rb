@@ -17,17 +17,18 @@ class PeriodTracker
 		@last_period = Date.strptime(last_period, '%m/%d/%Y')
 		@next_period = @last_period + @avg_period
 		@first_days = [@last_period]
+		@period_lengths = []
+		@variance = 0
 	end
 
 	def addDate(date)
 		@first_days << Date.strptime(date, '%m/%d/%Y')
-		if @first_days.length >= 2 then
-			@first_days.sort! unless datesSorted?
-			cycle_lengths = @first_days.each_cons(2).map { |day1, day2| (day2 - day1).to_i }
-			@avg_period = cycle_lengths.reduce(:+) / cycle_lengths.length
-		end
+		@first_days.sort! unless datesSorted?
+		@period_lengths = @first_days.each_cons(2).map { |day1, day2| (day2 - day1).to_i }
+		@avg_period = @period_lengths.inject(:+) / @period_lengths.length
 		@last_period = @first_days.last
 		@next_period = @last_period + @avg_period
+		@variance = @period_lengths.inject(0.0) { |s,x| s + (x - @avg_period) ** 2 }
 	end
 
 	private
