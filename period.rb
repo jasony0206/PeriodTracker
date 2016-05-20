@@ -8,26 +8,35 @@
 
 require 'date'
 
-# prompt user for period start dates and store
-puts "When were the first days of your menstruation period? (MM/DD/YYYY)"
-first_days = [];
-while !(day = gets.chomp).empty?
-	date = Date.strptime(day, '%m/%d/%Y')
-	first_days << date
+class PeriodTracker
+
+	attr_reader :first_days, :avg_period, :last_period, :next_period
+	
+	def initialize(last_period)
+		@avg_period = 28
+		@last_period = Date.strptime(last_period, '%m/%d/%Y')
+		@next_period = @last_period + @avg_period
+		@first_days = [@last_period]
+	end
+
+	def addDate(date)
+		@first_days << Date.strptime(date, '%m/%d/%Y')
+		if @first_days.length >= 2 then
+			@first_days.sort! unless datesSorted?
+			cycle_lengths = @first_days.each_cons(2).map { |day1, day2| (day2 - day1).to_i }
+			@avg_period = cycle_lengths.reduce(:+) / cycle_lengths.length
+		end
+		@last_period = @first_days.last
+		@next_period = @last_period + @avg_period
+	end
+
+	private
+
+	def datesSorted?
+		@first_days.each_cons(2).all? { |a,b| (a <=> b) <= 0 }
+	end
 end
 
-# sort days and compute cycle lengths
-first_days.sort!
-cycle_lengths = first_days.each_cons(2).map do |day1, day2|
-	(day2 - day1).to_i
-end
-
-avg_cycle = cycle_lengths.reduce(:+) / cycle_lengths.length
-puts "Average cycle length: #{avg_cycle}"
-
-puts "When was the first day of your last period?"
-last_period_day = gets.chomp
-last_period = Date.strptime(last_period_day, '%m/%d/%Y')
-expected_period = last_period + avg_cycle
-
-puts "Your next period is expected to be on #{expected_period.strftime('%m/%d/%Y')}"
+t = PeriodTracker.new("5/11/2016")
+t.addDate("4/7/2016")
+t.addDate("3/6/2016")
